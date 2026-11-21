@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Convierte código en HTML con resaltado y números de línea para pegarlo en Moodle.">
+    <meta name="theme-color" content="#175cd3">
+    <title>TinyCode Web · Código para Moodle</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <a class="skip-link" href="#source-code">Saltar al editor</a>
+
+    <main class="app-shell">
+        <header class="app-header">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">&lt;/&gt;</span>
+                <div>
+                    <h1>TinyCode <span>Web</span></h1>
+                    <p>Abre o escribe código · Convierte a HTML · Pégalo en Moodle</p>
+                </div>
+            </div>
+            <div class="privacy-badge" title="El código no sale de tu navegador">
+                <span class="privacy-dot" aria-hidden="true"></span>
+                Procesamiento local
+            </div>
+        </header>
+
+        <section class="controls-card" aria-label="Archivo y opciones de conversión">
+            <div class="file-actions">
+                <input id="file-input" type="file" hidden>
+                <button id="open-file" class="button button-secondary" type="button">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7.5h6l2 2h10v9.25A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75V7.5Zm0 0V5.25A2.25 2.25 0 0 1 5.25 3h3.4a2 2 0 0 1 1.42.59L12 5.5h6.75A2.25 2.25 0 0 1 21 7.75V9.5"/></svg>
+                    Abrir archivo…
+                </button>
+                <button id="paste-code" class="button button-secondary" type="button">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5.25h6m-7.5 0h-.75A2.25 2.25 0 0 0 4.5 7.5v11.25A2.25 2.25 0 0 0 6.75 21h10.5a2.25 2.25 0 0 0 2.25-2.25V7.5a2.25 2.25 0 0 0-2.25-2.25h-.75M9 3h6a1.5 1.5 0 0 1 0 3H9a1.5 1.5 0 0 1 0-3Z"/></svg>
+                    Pegar código
+                </button>
+                <button id="clear-code" class="button button-quiet" type="button">Limpiar</button>
+                <span id="file-label" class="file-label">Código escrito o pegado</span>
+            </div>
+
+            <div class="conversion-options">
+                <label class="field">
+                    <span>Lenguaje</span>
+                    <span class="select-wrap">
+                        <select id="language" aria-label="Lenguaje del código"></select>
+                    </span>
+                </label>
+                <label class="field">
+                    <span>Tema</span>
+                    <span class="select-wrap">
+                        <select id="theme" aria-label="Tema del bloque">
+                            <option value="Oscuro">Oscuro</option>
+                            <option value="Claro">Claro</option>
+                        </select>
+                    </span>
+                </label>
+                <label class="field field-small">
+                    <span>Tamaño</span>
+                    <span class="select-wrap">
+                        <select id="font-size" aria-label="Tamaño de letra">
+                            <option value="12">12 px</option>
+                            <option value="14" selected>14 px</option>
+                            <option value="16">16 px</option>
+                            <option value="18">18 px</option>
+                            <option value="20">20 px</option>
+                        </select>
+                    </span>
+                </label>
+                <label class="switch-field">
+                    <input id="line-numbers" type="checkbox" checked>
+                    <span class="switch" aria-hidden="true"></span>
+                    <span>Números de línea</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="workspace" aria-label="Conversor de código">
+            <article id="source-panel" class="panel source-panel">
+                <header class="panel-header">
+                    <div>
+                        <span class="step-label">Entrada</span>
+                        <h2>1. Tu código</h2>
+                    </div>
+                    <span id="source-stats" class="panel-meta">0 líneas · 0 caracteres</span>
+                </header>
+                <div id="drop-zone" class="editor-wrap">
+                    <textarea id="source-code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Código fuente" placeholder="Escribe, pega o arrastra aquí un archivo de código…"></textarea>
+                    <div id="drop-overlay" class="drop-overlay" aria-hidden="true">
+                        <strong>Suelta el archivo aquí</strong>
+                        <span>Máximo 2 MB</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="panel result-panel">
+                <header class="panel-header result-header">
+                    <div>
+                        <span class="step-label">Salida</span>
+                        <h2>2. Resultado</h2>
+                    </div>
+                    <span id="result-language" class="language-chip" hidden></span>
+                </header>
+
+                <div class="tabs" role="tablist" aria-label="Tipo de resultado">
+                    <button id="preview-tab" class="tab is-active" type="button" role="tab" aria-selected="true" aria-controls="preview-panel">Vista previa</button>
+                    <button id="html-tab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="html-panel">HTML para pegar</button>
+                </div>
+
+                <div id="preview-panel" class="tab-panel" role="tabpanel" aria-labelledby="preview-tab">
+                    <div id="preview-tools" class="preview-tools" hidden>
+                        <span>Vista del alumnado</span>
+                        <div class="preview-tool-buttons">
+                            <button id="preview-smaller" type="button" title="Disminuir tamaño" aria-label="Disminuir tamaño del código">A−</button>
+                            <button id="preview-larger" type="button" title="Aumentar tamaño" aria-label="Aumentar tamaño del código">A+</button>
+                            <button id="preview-reading" type="button" aria-pressed="false">Ayuda para leer</button>
+                        </div>
+                    </div>
+                    <div id="preview-host" class="preview-host">
+                        <div class="empty-state">
+                            <div class="empty-icon" aria-hidden="true">&lt;/&gt;</div>
+                            <strong>Tu bloque aparecerá aquí</strong>
+                            <span>Convierte el código para comprobar colores, sangría y numeración.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="html-panel" class="tab-panel" role="tabpanel" aria-labelledby="html-tab" hidden>
+                    <textarea id="html-output" readonly spellcheck="false" aria-label="HTML generado" placeholder="El HTML listo para Moodle aparecerá aquí."></textarea>
+                </div>
+            </article>
+        </section>
+
+        <section class="action-bar" aria-label="Acciones del resultado">
+            <div class="primary-actions">
+                <button id="convert-copy" class="button button-primary" type="button">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m8 9-3 3 3 3m8-6 3 3-3 3M14 5l-4 14"/></svg>
+                    Convertir y copiar HTML
+                </button>
+                <button id="copy-html" class="button button-secondary" type="button" disabled>Copiar HTML</button>
+                <button id="download-html" class="button button-secondary" type="button" disabled>Descargar HTML interactivo</button>
+                <button id="open-preview" class="button button-secondary" type="button" disabled>Ver en nueva pestaña</button>
+            </div>
+            <p class="moodle-hint"><strong>En Moodle:</strong> abre la vista HTML (&lt;&gt;), pega el resultado y guarda. Con Tiny Code Block, el alumnado tendrá los controles.</p>
+            <div id="status" class="status" role="status" aria-live="polite">
+                <span class="status-icon" aria-hidden="true">i</span>
+                <span id="status-text">Abre un archivo o pega tu código para empezar.</span>
+            </div>
+        </section>
+
+        <footer class="app-footer">
+            <span>TinyCode Web funciona sin servidor y no ejecuta el código.</span>
+            <span>Atajos: <kbd>Ctrl</kbd> + <kbd>O</kbd> · <kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+        </footer>
+    </main>
+
+    <noscript>Esta aplicación necesita JavaScript para convertir el código.</noscript>
+    <script src="vendor/highlight.min.js"></script>
+    <script src="js/app.bundle.js"></script>
+</body>
+</html>

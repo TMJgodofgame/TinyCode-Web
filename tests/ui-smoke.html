@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<title>TinyCode Web UI smoke test</title>
+<style>
+body{font:16px system-ui;margin:20px}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;opacity:.01;pointer-events:none}output{position:relative;z-index:2}
+</style>
+<output id="result">Running TinyCode Web UI checks…</output>
+<script>
+const output = document.querySelector('#result');
+const frame = document.createElement('iframe');
+frame.id = 'app';
+frame.title = 'TinyCode Web';
+const waitFor = (condition, timeout = 5000) => new Promise((resolve, reject) => {
+    const start = performance.now();
+    const poll = () => {
+        if (condition()) resolve();
+        else if (performance.now() - start > timeout) reject(new Error('Timed out waiting for the app.'));
+        else setTimeout(poll, 25);
+    };
+    poll();
+});
+const check = (condition, message) => {
+    if (!condition) throw new Error(message);
+};
+
+const runChecks = async() => {
+    try {
+        const doc = frame.contentDocument;
+        await waitFor(() => doc.documentElement.dataset.appReady === 'true');
+        const languageValues = Array.from(doc.querySelector('#language').options, (option) => option.value);
+        check(languageValues[0] === 'auto', 'The automatic language option is missing.');
+        check(languageValues.length >= 25, 'The programming-language list is incomplete.');
+        check(['python', 'javascript', 'cpp', 'java'].every((name) => languageValues.includes(name)),
+            'Expected programming languages are missing.');
+
+        const tabEditor = doc.querySelector('#source-code');
+        tabEditor.value = 'inicio';
+        tabEditor.setSelectionRange(tabEditor.value.length, tabEditor.value.length);
+        tabEditor.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab', bubbles: true, cancelable: true}));
+        check(tabEditor.value === 'inicio\t', 'The Tab key did not insert a tab character.');
+
+        const source = 'import os\ndef saludo(nombre):\n    if nombre:\n        return "Hola, " + nombre\n    return "Hola"';
+        const editor = doc.querySelector('#source-code');
+        editor.value = source;
+        editor.dispatchEvent(new Event('input', {bubbles: true}));
+        doc.querySelector('#language').value = 'auto';
+        doc.querySelector('#convert-copy').click();
+        await waitFor(() => doc.querySelector('#html-output').value.includes('data-codeblock-html'));
+
+        const generated = doc.querySelector('#html-output').value;
+        const code = doc.querySelector('#preview-host code');
+        check(code && code.textContent === source, 'The preview did not preserve the source.');
+        check(generated.includes('language-python'), 'Automatic Python detection failed.');
+        check(!generated.includes('<script'), 'The Moodle fragment contains a script.');
+        check(Boolean(doc.querySelector('#preview-host [data-codeblock-gutter]')), 'Line numbers are missing.');
+        check(!doc.querySelector('#copy-html').disabled, 'Result actions were not enabled.');
+
+        doc.querySelector('#preview-reading').click();
+        check(doc.querySelector('#preview-reading').getAttribute('aria-pressed') === 'true', 'Reading help did not activate.');
+        check(doc.querySelector('#preview-host code').textContent.includes('import os\n\ndef'), 'Reading help did not add its safe gap.');
+
+        doc.querySelector('#html-tab').click();
+        check(!doc.querySelector('#html-panel').hidden && doc.querySelector('#preview-panel').hidden, 'Result tabs did not switch.');
+        check(doc.querySelector('#result-language').textContent === 'Python', 'Detected language label is incorrect.');
+
+        output.textContent = 'PASS: conversion, preview, tabs, numbering and reading controls';
+        document.body.dataset.testStatus = 'passed';
+    } catch (error) {
+        output.textContent = 'FAIL: ' + error.stack;
+        document.body.dataset.testStatus = 'failed';
+    }
+};
+
+frame.addEventListener('load', runChecks, {once: true});
+frame.src = '../index.html';
+document.body.appendChild(frame);
+</script>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "tinycode-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Conversor local de código a HTML compatible con Moodle.",
+  "scripts": {
+    "build": "node tools/build-bundle.mjs",
+    "pretest": "node tools/build-bundle.mjs",
+    "test": "node --test tests/core.test.mjs",
+    "test:browser": "node tools/build-bundle.mjs && node tests/browser-smoke.cjs",
+    "serve": "python -m http.server 8081"
+  }
+}
